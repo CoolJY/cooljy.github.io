@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나라 게임 for LEO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .game-selection, .difficulty-selection, .game-area {
+            display: none;
+        }
+
+        .game-selection.active, .difficulty-selection.active, .game-area.active {
+            display: block;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .difficulty-hard {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+
+        .difficulty-medium {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+        }
+
+        .difficulty-easy {
+            background: linear-gradient(45deg, #48dbfb, #0abde3);
+        }
+
+        .flag {
+            width: 200px;
+            height: 120px;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            background: #f8f9fa;
+        }
+
+        .question {
+            font-size: 1.5em;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .input-area {
+            margin: 20px 0;
+        }
+
+        .answer-input {
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            width: 300px;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .score-info {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .game-over {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .game-over h2 {
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .final-score {
+            font-size: 3em;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 나라 게임 for LEO</h1>
+        
+        <!-- 게임 선택 화면 -->
+        <div class="game-selection active">
+            <h2>게임을 선택하세요</h2>
+            <button class="button" onclick="selectGame('flag-to-country')">
+                🏳️ 국기 보고 나라 맞추기
+            </button>
+            <button class="button" onclick="selectGame('country-to-capital')">
+                🏛️ 나라 보고 수도 맞추기
+            </button>
+            <button class="button" onclick="selectGame('capital-to-country')">
+                🏙️ 수도 보고 나라 맞추기
+            </button>
+        </div>
+
+        <!-- 난이도 선택 화면 -->
+        <div class="difficulty-selection">
+            <h2>난이도를 선택하세요</h2>
+            <button class="button difficulty-hard" onclick="selectDifficulty('hard')">
+                🔥 상 (30점)
+            </button>
+            <button class="button difficulty-medium" onclick="selectDifficulty('medium')">
+                ⚡ 중 (20점)
+            </button>
+            <button class="button difficulty-easy" onclick="selectDifficulty('easy')">
+                ✨ 하 (10점)
+            </button>
+            <br>
+            <button class="button" onclick="goBack()" style="background: #6c757d; margin-top: 20px;">
+                ← 뒤로가기
+            </button>
+        </div>
+
+        <!-- 게임 화면 -->
+        <div class="game-area">
+            <div class="score-info">
+                <div>점수: <span id="score">0</span></div>
+                <div>틀린 횟수: <span id="mistakes">0</span>/3</div>
+                <div>문제: <span id="question-number">1</span></div>
+            </div>
+
+            <div id="question-content"></div>
+            
+            <div class="input-area">
+                <input type="text" id="answer-input" class="answer-input" placeholder="답을 입력하세요" onkeypress="handleKeyPress(event)">
+                <br>
+                <button class="button" onclick="submitAnswer()">제출</button>
+                <button class="button" onclick="skipQuestion()" style="background: #6c757d;">건너뛰기</button>
+            </div>
+
+            <div id="feedback"></div>
+
+            <button class="button" onclick="goToMenu()" style="background: #6c757d; margin-top: 20px;">
+                메뉴로 돌아가기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 게임 데이터
+        const gameData = {
+            easy: [
+                { name: "대한민국", capital: "서울", flag: "🇰🇷" },
+                { name: "일본", capital: "도쿄", flag: "🇯🇵" },
+                { name: "중국", capital: "베이징", flag: "🇨🇳" },
+                { name: "미국", capital: "워싱턴", flag: "🇺🇸" },
+                { name: "영국", capital: "런던", flag: "🇬🇧" },
+                { name: "프랑스", capital: "파리", flag: "🇫🇷" },
+                { name: "독일", capital: "베를린", flag: "🇩🇪" },
+                { name: "이탈리아", capital: "로마", flag: "🇮🇹" },
+                { name: "스페인", capital: "마드리드", flag: "🇪🇸" },
+                { name: "러시아", capital: "모스크바", flag: "🇷🇺" },
+                { name: "네덜란드", capital: "암스테르담", flag: "🇳🇱" },
+                { name: "벨기에", capital: "브뤼셀", flag: "🇧🇪" },
+                { name: "스위스", capital: "베른", flag: "🇨🇭" },
+                { name: "오스트리아", capital: "빈", flag: "🇦🇹" },
+                { name: "포르투갈", capital: "리스본", flag: "🇵🇹" },
+                { name: "그리스", capital: "아테네", flag: "🇬🇷" },
+                { name: "노르웨이", capital: "오슬로", flag: "🇳🇴" },
+                { name: "스웨덴", capital: "스톡홀름", flag: "🇸🇪" },
+                { name: "덴마크", capital: "코펜하겐", flag: "🇩🇰" },
+                { name: "핀란드", capital: "헬싱키", flag: "🇫🇮" },
+                { name: "폴란드", capital: "바르샤바", flag: "🇵🇱" },
+                { name: "체코", capital: "프라하", flag: "🇨🇿" },
+                { name: "헝가리", capital: "부다페스트", flag: "🇭🇺" },
+                { name: "아일랜드", capital: "더블린", flag: "🇮🇪" },
+                { name: "이스라엘", capital: "예루살렘", flag: "🇮🇱" },
+                { name: "사우디아라비아", capital: "리야드", flag: "🇸🇦" },
+                { name: "인도네시아", capital: "자카르타", flag: "🇮🇩" },
+                { name: "싱가포르", capital: "싱가포르", flag: "🇸🇬" },
+                { name: "말레이시아", capital: "쿠알라룸푸르", flag: "🇲🇾" },
+                { name: "필리핀", capital: "마닐라", flag: "🇵🇭" },
+                { name: "베트남", capital: "하노이", flag: "🇻🇳" },
+                { name: "뉴질랜드", capital: "웰링턴", flag: "🇳🇿" },
+                { name: "아르헨티나", capital: "부에노스아이레스", flag: "🇦🇷" },
+                { name: "칠레", capital: "산티아고", flag: "🇨🇱" },
+                { name: "이집트", capital: "카이로", flag: "🇪🇬" },
+                { name: "남아프리카공화국", capital: "케이프타운", flag: "🇿🇦" },
+                { name: "우크라이나", capital: "키예프", flag: "🇺🇦" },
+                { name: "베네수엘라", capital: "카라카스", flag: "🇻🇪" },
+                { name: "쿠바", capital: "아바나", flag: "🇨🇺" },
+                { name: "콜롬비아", capital: "보고타", flag: "🇨🇴" }
+            ],
+            medium: [
+                { name: "캐나다", capital: "오타와", flag: "🇨🇦" },
+                { name: "호주", capital: "캔버라", flag: "🇦🇺" },
+                { name: "브라질", capital: "브라질리아", flag: "🇧🇷" },
+                { name: "인도", capital: "뉴델리", flag: "🇮🇳" },
+                { name: "멕시코", capital: "멕시코시티", flag: "🇲🇽" },
+                { name: "터키", capital: "앙카라", flag: "🇹🇷" },
+                { name: "태국", capital: "방콕", flag: "🇹🇭" },
+                { name: "이란", capital: "테헤란", flag: "🇮🇷" },
+                { name: "이라크", capital: "바그다드", flag: "🇮🇶" },
+                { name: "파키스탄", capital: "이슬라마바드", flag: "🇵🇰" },
+                { name: "방글라데시", capital: "다카", flag: "🇧🇩" },
+                { name: "스리랑카", capital: "콜롬보", flag: "🇱🇰" },
+                { name: "미얀마", capital: "네피도", flag: "🇲🇲" },
+                { name: "캄보디아", capital: "프놈펜", flag: "🇰🇭" },
+                { name: "라오스", capital: "비엔티안", flag: "🇱🇦" },
+                { name: "네팔", capital: "카트만두", flag: "🇳🇵" },
+                { name: "몰디브", capital: "말레", flag: "🇲🇻" },
+                { name: "아프가니스탄", capital: "카불", flag: "🇦🇫" },
+                { name: "요단", capital: "암만", flag: "🇯🇴" },
+                { name: "레바논", capital: "베이루트", flag: "🇱🇧" },
+                { name: "시리아", capital: "다마스쿠스", flag: "🇸🇾" },
+                { name: "예멘", capital: "사나", flag: "🇾🇪" },
+                { name: "오만", capital: "무스카트", flag: "🇴🇲" },
+                { name: "아랍에미리트", capital: "아부다비", flag: "🇦🇪" },
+                { name: "카타르", capital: "도하", flag: "🇶🇦" },
+                { name: "바레인", capital: "마나마", flag: "🇧🇭" },
+                { name: "쿠웨이트", capital: "쿠웨이트시티", flag: "🇰🇼" },
+                { name: "알제리", capital: "알제", flag: "🇩🇿" },
+                { name: "모로코", capital: "라바트", flag: "🇲🇦" },
+                { name: "튀니지", capital: "튀니스", flag: "🇹🇳" },
+                { name: "리비아", capital: "트리폴리", flag: "🇱🇾" },
+                { name: "수단", capital: "하르툼", flag: "🇸🇩" },
+                { name: "에티오피아", capital: "아디스아바바", flag: "🇪🇹" },
+                { name: "케냐", capital: "나이로비", flag: "🇰🇪" },
+                { name: "탄자니아", capital: "도도마", flag: "🇹🇿" },
+                { name: "우간다", capital: "캄팔라", flag: "🇺🇬" },
+                { name: "가나", capital: "아크라", flag: "🇬🇭" },
+                { name: "나이지리아", capital: "아부자", flag: "🇳🇬" },
+                { name: "세네갈", capital: "다카르", flag: "🇸🇳" },
+                { name: "페루", capital: "리마", flag: "🇵🇪" }
+            ],
+            hard: [
+                { name: "우즈베키스탄", capital: "타슈켄트", flag: "🇺🇿" },
+                { name: "카자흐스탄", capital: "누르술탄", flag: "🇰🇿" },
+                { name: "몽골", capital: "울란바토르", flag: "🇲🇳" },
+                { name: "리투아니아", capital: "빌뉴스", flag: "🇱🇹" },
+                { name: "라트비아", capital: "리가", flag: "🇱🇻" },
+                { name: "에스토니아", capital: "탈린", flag: "🇪🇪" },
+                { name: "슬로베니아", capital: "류블랴나", flag: "🇸🇮" },
+                { name: "크로아티아", capital: "자그레브", flag: "🇭🇷" },
+                { name: "불가리아", capital: "소피아", flag: "🇧🇬" },
+                { name: "루마니아", capital: "부쿠레슈티", flag: "🇷🇴" },
+                { name: "세르비아", capital: "베오그라드", flag: "🇷🇸" },
+                { name: "몬테네그로", capital: "포드고리차", flag: "🇲🇪" },
+                { name: "보스니아헤르체고비나", capital: "사라예보", flag: "🇧🇦" },
+                { name: "북마케도니아", capital: "스코페", flag: "🇲🇰" },
+                { name: "알바니아", capital: "티라나", flag: "🇦🇱" },
+                { name: "몰도바", capital: "키시너우", flag: "🇲🇩" },
+                { name: "벨라루스", capital: "민스크", flag: "🇧🇾" },
+                { name: "조지아", capital: "트빌리시", flag: "🇬🇪" },
+                { name: "아르메니아", capital: "예레반", flag: "🇦🇲" },
+                { name: "아제르바이잔", capital: "바쿠", flag: "🇦🇿" },
+                { name: "키르기스스탄", capital: "비슈케크", flag: "🇰🇬" },
+                { name: "타지키스탄", capital: "두샨베", flag: "🇹🇯" },
+                { name: "투르크메니스탄", capital: "아시가바트", flag: "🇹🇲" },
+                { name: "부탄", capital: "팀푸", flag: "🇧🇹" },
+                { name: "브루나이", capital: "반다르스리브가완", flag: "🇧🇳" },
+                { name: "파푸아뉴기니", capital: "포트모르즈비", flag: "🇵🇬" },
+                { name: "피지", capital: "수바", flag: "🇫🇯" },
+                { name: "팔라우", capital: "느거룰무드", flag: "🇵🇼" },
+                { name: "마셜제도", capital: "마주로", flag: "🇲🇭" },
+                { name: "미크로네시아", capital: "팔리키르", flag: "🇫🇲" },
+                { name: "나우루", capital: "야렌", flag: "🇳🇷" },
+                { name: "키리바시", capital: "타라와", flag: "🇰🇮" },
+                { name: "투발루", capital: "푸나푸티", flag: "🇹🇻" },
+                { name: "통가", capital: "누쿠알로파", flag: "🇹🇴" },
+                { name: "사모아", capital: "아피아", flag: "🇼🇸" },
+                { name: "바누아투", capital: "포트빌라", flag: "🇻🇺" },
+                { name: "솔로몬제도", capital: "호니아라", flag: "🇸🇧" },
+                { name: "코모로", capital: "모로니", flag: "🇰🇲" },
+                { name: "마다가스카르", capital: "안타나나리보", flag: "🇲🇬" },
+                { name: "모리셔스", capital: "포트루이스", flag: "🇲🇺" },
+                { name: "세이셸", capital: "빅토리아", flag: "🇸🇨" }
+            ]
+        };
+
+        // 게임 상태
+        let currentGame = '';
+        let currentDifficulty = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let mistakes = 0;
+        let questionsAnswered = 0;
+
+        function selectGame(gameType) {
+            currentGame = gameType;
+            document.querySelector('.game-selection').classList.remove('active');
+            document.querySelector('.difficulty-selection').classList.add('active');
+        }
+
+        function selectDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            startGame();
+        }
+
+        function startGame() {
+            // 게임 초기화
+            score = 0;
+            mistakes = 0;
+            questionsAnswered = 0;
+            currentQuestionIndex = 0;
+
+            // 문제 준비
+            const difficultyData = currentDifficulty === 'easy' ? gameData.easy : 
+                                 currentDifficulty === 'medium' ? gameData.medium : 
+                                 gameData.hard;
+            
+            currentQuestions = [...difficultyData].sort(() => Math.random() - 0.5);
+
+            // 화면 전환
+            document.querySelector('.difficulty-selection').classList.remove('active');
+            document.querySelector('.game-area').classList.add('active');
+
+            // 첫 문제 표시
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= currentQuestions.length) {
+                currentQuestionIndex = 0; // 문제 순환
+            }
+
+            const question = currentQuestions[currentQuestionIndex];
+            const questionContent = document.getElementById('question-content');
+            
+            // 점수 정보 업데이트
+            document.getElementById('score').textContent = score;
+            document.getElementById('mistakes').textContent = mistakes;
+            document.getElementById('question-number').textContent = questionsAnswered + 1;
+
+            // 문제 표시
+            let content = '';
+            if (currentGame === 'flag-to-country') {
+                content = `
+                    <div class="flag">${question.flag}</div>
+                    <div class="question">이 국기는 어느 나라의 국기일까요?</div>
+                `;
+            } else if (currentGame === 'country-to-capital') {
+                content = `
+                    <div class="question">${question.name}의 수도는?</div>
+                `;
+            } else if (currentGame === 'capital-to-country') {
+                content = `
+                    <div class="question">${question.capital}은(는) 어느 나라의 수도일까요?</div>
+                `;
+            }
+
+            questionContent.innerHTML = content;
+            
+            // 입력창 초기화 및 포커스
+            const answerInput = document.getElementById('answer-input');
+            answerInput.value = '';
+            answerInput.focus();
+            
+            // 피드백 초기화
+            document.getElementById('feedback').innerHTML = '';
+        }
+
+        function submitAnswer() {
+            const userAnswer = document.getElementById('answer-input').value.trim();
+            if (!userAnswer) return;
+
+            const question = currentQuestions[currentQuestionIndex];
+            let correctAnswer = '';
+            
+            if (currentGame === 'flag-to-country') {
+                correctAnswer = question.name;
+            } else if (currentGame === 'country-to-capital') {
+                correctAnswer = question.capital;
+            } else if (currentGame === 'capital-to-country') {
+                correctAnswer = question.name;
+            }
+
+            const isCorrect = userAnswer === correctAnswer;
+            showFeedback(isCorrect, correctAnswer);
+
+            if (isCorrect) {
+                const points = currentDifficulty === 'hard' ? 30 : 
+                              currentDifficulty === 'medium' ? 20 : 10;
+                score += points;
+            } else {
+                mistakes++;
+                if (mistakes >= 3) {
+                    endGame();
+                    return;
+                }
+            }
+
+            questionsAnswered++;
+            currentQuestionIndex = (currentQuestionIndex + 1) % currentQuestions.length;
+            
+            setTimeout(() => {
+                showQuestion();
+            }, 2000);
+        }
+
+        function skipQuestion() {
+            mistakes++;
+            showFeedback(false, getCurrentAnswer());
+            
+            if (mistakes >= 3) {
+                endGame();
+                return;
+            }
+
+            questionsAnswered++;
+            currentQuestionIndex = (currentQuestionIndex + 1) % currentQuestions.length;
+            
+            setTimeout(() => {
+                showQuestion();
+            }, 2000);
+        }
+
+        function getCurrentAnswer() {
+            const question = currentQuestions[currentQuestionIndex];
+            if (currentGame === 'flag-to-country') {
+                return question.name;
+            } else if (currentGame === 'country-to-capital') {
+                return question.capital;
+            } else if (currentGame === 'capital-to-country') {
+                return question.name;
+            }
+        }
+
+        function showFeedback(isCorrect, correctAnswer) {
+            const feedback = document.getElementById('feedback');
+            if (isCorrect) {
+                const points = currentDifficulty === 'hard' ? 30 : 
+                              currentDifficulty === 'medium' ? 20 : 10;
+                feedback.innerHTML = `<div class="feedback correct">정답! +${points}점</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback incorrect">틀렸습니다. 정답: ${correctAnswer}</div>`;
+            }
+        }
+
+        function endGame() {
+            const gameArea = document.querySelector('.game-area');
+            gameArea.innerHTML = `
+                <div class="game-over">
+                    <h2>🎮 게임 종료!</h2>
+                    <div class="final-score">${score}점</div>
+                    <p>총 ${questionsAnswered}문제 중 ${questionsAnswered - mistakes}문제를 맞추셨습니다!</p>
+                    <button class="button" onclick="goToMenu()" style="background: white; color: #333; margin-top: 20px;">
+                        다시 시작하기
+                    </button>
+                </div>
+            `;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                submitAnswer();
+            }
+        }
+
+        function goBack() {
+            document.querySelector('.difficulty-selection').classList.remove('active');
+            document.querySelector('.game-selection').classList.add('active');
+        }
+
+        function goToMenu() {
+            // 모든 화면 숨기기
+            document.querySelectorAll('.game-selection, .difficulty-selection, .game-area').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 게임 선택 화면 표시
+            document.querySelector('.game-selection').classList.add('active');
+            
+            // 게임 영역 초기화 (게임 종료 후 다시 시작할 때)
+            const gameArea = document.querySelector('.game-area');
+            if (gameArea.innerHTML.includes('game-over')) {
+                location.reload(); // 페이지 새로고침으로 완전 초기화
+            }
+        }
+    </script>
+</body>
+</html>
